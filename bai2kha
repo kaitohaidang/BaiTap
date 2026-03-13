@@ -1,0 +1,21 @@
+create table university.Students(
+student_id serial primary key,
+first_name varchar(50) not null,
+last_name varchar(50) not null,
+birth_date date,
+email varchar(255) not null unique
+);
+create table university.Courses(
+   course_id serial primary key,
+   course_name varchar(100) not null,
+   credits int
+);
+create table university.Enrollments(
+   enrollment_id serial primary key,
+   student_id int references university.Students(student_id),
+   course_id int references university.Courses(course_id),
+   enroll_date date
+);
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'university' AND table_name = 'students';
