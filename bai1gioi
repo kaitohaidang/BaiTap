@@ -1,0 +1,29 @@
+create schema sales 
+
+create table sales.Customers(
+    customer_id serial primary key,
+	first_name varchar(50) not null,
+	last_name varchar(50) not null,
+	email varchar(255) not null unique,
+	phone varchar(255)
+);
+create table sales.Products (
+    product_id serial primary key,
+	product_name varchar(100) not null,
+	price numeric(10,2) not null,
+	stock_quantity int not null
+);
+create table sales.Orders (
+    order_id serial primary key,
+	customer_id int references sales.Customers(customer_id),
+	order_date date not null
+);
+create table sales.OrderItems (
+    order_item_id serial primary key,
+	order_id int references sales.Orders(order_id),
+	product_id int references sales.Products(product_id),
+	quantity int check(quantity >=1)
+);
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'Customers' AND table_name = 'Products';
