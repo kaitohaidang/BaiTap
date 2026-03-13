@@ -1,0 +1,17 @@
+
+create table library.Books(
+ book_id serial primary key,
+ title varchar(100) not null,
+ author varchar(50) not null,
+ published_year int,
+ price numeric(10,2)
+);
+-- xem tat cả db
+SELECT datname FROM pg_database;
+-- xem tat ca schema
+SELECTschema_name FROM information_schema.schemata;
+--xem cau truc cua cac cot trong bang Books
+
+SELECT column_name, data_type, character_maximum_length, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'library' AND table_name = 'books';
