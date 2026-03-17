@@ -1,37 +1,40 @@
-CREATE TABLE students (
-    id SERIAL PRIMARY KEY,      -- ID tự động tăng
-    full_name VARCHAR(100),     -- Họ và tên
-    gender VARCHAR(10),         -- Giới tính
-    birth_year INT,             -- Năm sinh
-    major VARCHAR(50),          -- Chuyên ngành
-    gpa DECIMAL(3,2)            -- Điểm trung bình (ví dụ: 3.60)
+DROP TABLE IF EXISTS products;
+
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    category VARCHAR(50),
+    price BIGINT,
+    stock INT,
+    manufacturer VARCHAR(50) -- Đảm bảo có dòng này
 );
-INSERT INTO students (full_name, gender, birth_year, major, gpa) VALUES
-('Nguyễn Văn A', 'Nam', 2002, 'CNTT', 3.6),
-('Trần Thị Bích Ngọc', 'Nữ', 2001, 'Kinh tế', 3.2),
-('Lê Quốc Cường', 'Nam', 2003, 'CNTT', 2.7),
-('Phạm Minh Anh', 'Nữ', 2000, 'Luật', 3.9),
-('Nguyễn Văn A', 'Nam', 2002, 'CNTT', 3.6), -- Dòng trùng lặp theo ảnh
-('Lưu Đức Tài', '2004', 2004, 'Cơ khí', NULL), -- Dòng lỗi gender và gpa theo ảnh
-('Võ Thị Thu Hằng', 'Nữ', 2001, 'CNTT', 3.0);
+INSERT INTO products (name, category, price, stock, manufacturer) VALUES
+('Laptop Dell XPS 13', 'Laptop', 25000000, 12, 'Dell'),
+('Chuột Logitech M90', 'Phụ kiện', 150000, 50, 'Logitech'),
+('Bàn phím cơ Razer', 'Phụ kiện', 2200000, 0, 'Razer'),
+('Macbook Air M2', 'Laptop', 32000000, 7, 'Apple'),
+('iPhone 14 Pro Max', 'Điện thoại', 35000000, 15, 'Apple'),
+('Laptop Dell XPS 13', 'Laptop', 25000000, 12, 'Dell'),
+('Tai nghe AirPods 3', 'Phụ kiện', 4500000, NULL, 'Apple');
+ select *from products
+ 
+INSERT INTO products (name, category, price, stock, manufacturer) VALUES
+('Chuột không dây Logitech M170', ' Phụ kiện', 300000, 20, 'Logitech'),
 
-INSERT INTO students (full_name, gender, birth_year, major, gpa) VALUES
-('Phan Hoàng Nam', 'Nam', 2003, 'CNTT', 3.8)
+update products 
+set price = price*1.1
+where manufacturer = 'Apple';
 
-update students
-set gpa=3.4
-where name='Lê Quốc Cường'
+delete from products where stock=0
 
-delete from students where name is null
+select *from products where price between 1000000 and 30000000
 
-select *from students where gpa>=3.0 and major='CNTT' limit 3
+select *from products where stock is null
 
-select distinct major from students 
+select distinct manufacturer from products
 
-select *from students where major='CNTT' order by gpa desc , full_name asc
+select *from products order by price asc ,name desc
 
-select *from students where full_name like 'Nguyễn%'
+select *from products where name ilike ('%laptop%')
 
-select *from students where birth_year between 2001 and 2003
-
-
+select *from products order by name asc limit 2
