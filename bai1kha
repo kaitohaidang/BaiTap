@@ -1,17 +1,38 @@
-
-create table library.Books(
- book_id serial primary key,
- title varchar(100) not null,
- author varchar(50) not null,
- published_year int,
- price numeric(10,2)
+CREATE TABLE students (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50),
+    age INT,
+    major VARCHAR(50),
+    gpa DECIMAL(3,2)
 );
--- xem tat cả db
-SELECT datname FROM pg_database;
--- xem tat ca schema
-SELECTschema_name FROM information_schema.schemata;
---xem cau truc cua cac cot trong bang Books
 
-SELECT column_name, data_type, character_maximum_length, is_nullable
-FROM information_schema.columns
-WHERE table_schema = 'library' AND table_name = 'books';
+INSERT INTO students (name, age, major, gpa) VALUES
+('An', 20, 'CNTT', 3.5),
+('Bình', 21, 'Toán', 3.2),
+('Cường', 22, 'CNTT', 3.8),
+('Dương', 20, 'Vật lý', 3.0),
+('Em', 21, 'CNTT', 2.9);
+
+--Thêm sinh viên mới: "Hùng", 23 tuổi, chuyên ngành "Hóa học", GPA 3.4
+insert into students (name, age, major, gpa) values
+('Hùng',23,'Hóa Học',3.4);
+--Cập nhật GPA của sinh viên "Bình" thành 3.6
+update students
+set gpa=3.6
+where name='Bình';
+
+select *from students
+--Xóa sinh viên có GPA thấp hơn 3.0
+delete from students
+where gpa<3.0;
+
+--Liệt kê tất cả sinh viên, chỉ hiển thị tên và chuyên ngành, sắp xếp theo GPA giảm dần
+select name ,major from students order by gpa desc
+--Liệt kê tên sinh viên duy nhất có chuyên ngành "CNTT"
+select distinct name from students where major='CNTT' 
+--Liệt kê sinh viên có GPA từ 3.0 đến 3.6
+select *from students where gpa between 3.0 and 3.6
+--Liệt kê sinh viên có tên bắt đầu bằng chữ 'C'
+select *from students where name like 'C%'
+--Hiển thị 3 sinh viên đầu tiên theo thứ tự tên tăng dần, hoặc lấy từ sinh viên thứ 2 đến thứ 4 bằng LIMIT và OFFSET
+select *from students order by name asc limit 3 
