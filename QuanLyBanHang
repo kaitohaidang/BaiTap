@@ -1,0 +1,21 @@
+CREATE SCHEMA sales;
+
+CREATE TABLE sales.Products (
+    product_id SERIAL PRIMARY KEY,
+    product_name VARCHAR(255) NOT NULL,
+    price NUMERIC(10, 2) NOT NULL,
+    stock_quantity INT NOT NULL
+);
+
+CREATE TABLE sales.Orders (
+    order_id SERIAL PRIMARY KEY,
+    order_date DATE DEFAULT CURRENT_DATE,
+    member_id INT REFERENCES library.Members(member_id)
+);
+
+CREATE TABLE sales.OrderDetails (
+    order_detail_id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES sales.Orders(order_id),
+    product_id INT REFERENCES sales.Products(product_id),
+    quantity INT NOT NULL
+);
