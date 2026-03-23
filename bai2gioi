@@ -1,40 +1,127 @@
-DROP TABLE IF EXISTS products;
 
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    category VARCHAR(50),
-    price BIGINT,
-    stock INT,
-    manufacturer VARCHAR(50) -- Đảm bảo có dòng này
+CREATE TABLE customers (
+    customer_id SERIAL PRIMARY KEY,
+    customer_name VARCHAR(100),
+    city VARCHAR(50)
 );
-INSERT INTO products (name, category, price, stock, manufacturer) VALUES
-('Laptop Dell XPS 13', 'Laptop', 25000000, 12, 'Dell'),
-('Chuột Logitech M90', 'Phụ kiện', 150000, 50, 'Logitech'),
-('Bàn phím cơ Razer', 'Phụ kiện', 2200000, 0, 'Razer'),
-('Macbook Air M2', 'Laptop', 32000000, 7, 'Apple'),
-('iPhone 14 Pro Max', 'Điện thoại', 35000000, 15, 'Apple'),
-('Laptop Dell XPS 13', 'Laptop', 25000000, 12, 'Dell'),
-('Tai nghe AirPods 3', 'Phụ kiện', 4500000, NULL, 'Apple');
- select *from products
- 
-INSERT INTO products (name, category, price, stock, manufacturer) VALUES
-('Chuột không dây Logitech M170', ' Phụ kiện', 300000, 20, 'Logitech'),
 
-update products 
-set price = price*1.1
-where manufacturer = 'Apple';
+CREATE TABLE orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(customer_id),
+    order_date DATE,
+    total_amount NUMERIC(10,2)
+);
 
-delete from products where stock=0
+CREATE TABLE order_items (
+    item_id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(order_id),
+    product_name VARCHAR(100),
+    quantity INT,
+    price NUMERIC(10,2)
+);
 
-select *from products where price between 1000000 and 30000000
 
-select *from products where stock is null
+INSERT INTO customers (customer_id, customer_name, city) VALUES
+(1, 'Công ty A', 'Hà Nội'),
+(2, 'Cửa hàng B', 'Hồ Chí Minh'),
+(3, 'Đại lý C', 'Hà Nội'),
+(4, 'Khách lẻ D', 'Đà Nẵng'),
+(5, 'Khách lẻ E', 'Hải Phòng');
 
-select distinct manufacturer from products
 
-select *from products order by price asc ,name desc
+INSERT INTO orders (order_id, customer_id, order_date, total_amount) VALUES
+(101, 1, '2024-03-01', 12000.00),
+(102, 2, '2024-03-05', 8000.00),
+(103, 1, '2024-03-10', 3000.00),
+(104, 3, '2024-03-12', 2000.00),
+(105, 4, '2024-03-15', 5000.00);
 
-select *from products where name ilike ('%laptop%')
+INSERT INTO order_items (item_id, order_id, product_name, quantity, price) VALUES
+(1, 101, 'Laptop Dell', 1, 12000.00),
+(2, 102, 'IPhone 15', 2, 4000.00),
+(3, 103, 'Tai nghe Sony', 3, 1000.00),
+(4, 104, 'Bàn phím cơ', 2, 1000.00),
+(5, 105, 'Màn hình LG', 1, 5000.00);
 
-select *from products order by name asc limit 2
+SELECT setval('customers_customer_id_seq', 5);
+SELECT setval('orders_order_id_seq', 105);
+SELECT setval('order_items_item_id_seq', 5);
+
+
+
+-- 1. ALIAS: Hiển thị danh sách đơn hàng
+SELECT 
+    c.customer_name, 
+    o.order_date, 
+    o.total_amount
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id;
+
+SELECT 
+    SUM(total_amount) AS tong_doanh_thu,
+    AVG(total_amount) AS trung_binh_gia_tri_don,
+    MAX(total_amount) AS don_hang_lon_nhat,
+    MIN(total_amount) AS don_hang_nho_nhat,
+    COUNT(order_id) AS so_luong_don_hang
+FROM 
+    orders;
+
+
+SELECT 
+    c.city, 
+    SUM(o.total_amount) AS total_revenue
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+GROUP BY 
+    c.city
+HAVING 
+    SUM(o.total_amount) > 10000;
+
+
+-- 4. JOIN: Liệt kê chi tiết sản phẩm đã bán từ 3 bảng
+SELECT 
+    oi.product_name,
+    c.customer_name,
+    o.order_date,
+    oi.quantity,
+    oi.price
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+JOIN 
+    order_items oi ON o.order_id = oi.order_id;
+
+
+SELECT 
+    c.customer_name, 
+    SUM(o.total_amount) AS max_revenue
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+GROUP BY 
+    c.customer_id, c.customer_name
+HAVING SUM(o.total_amount) = (
+    SELECT MAX(revenue) 
+    FROM (
+        SELECT SUM(total_amount) AS revenue
+        FROM orders
+        GROUP BY customer_id
+    ) AS sub
+);
+
+
+
+SELECT city FROM customers
+UNION
+SELECT c.city FROM customers c JOIN orders o ON c.customer_id = o.customer_id;
+
+
+SELECT city FROM customers
+INTERSECT
+SELECT c.city FROM customers c JOIN orders o ON c.customer_id = o.customer_id;
