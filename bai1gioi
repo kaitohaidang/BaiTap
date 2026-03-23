@@ -1,37 +1,102 @@
-CREATE TABLE students (
-    id SERIAL PRIMARY KEY,      -- ID tự động tăng
-    full_name VARCHAR(100),     -- Họ và tên
-    gender VARCHAR(10),         -- Giới tính
-    birth_year INT,             -- Năm sinh
-    major VARCHAR(50),          -- Chuyên ngành
-    gpa DECIMAL(3,2)            -- Điểm trung bình (ví dụ: 3.60)
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(100),
+    city VARCHAR(100)
 );
-INSERT INTO students (full_name, gender, birth_year, major, gpa) VALUES
-('Nguyễn Văn A', 'Nam', 2002, 'CNTT', 3.6),
-('Trần Thị Bích Ngọc', 'Nữ', 2001, 'Kinh tế', 3.2),
-('Lê Quốc Cường', 'Nam', 2003, 'CNTT', 2.7),
-('Phạm Minh Anh', 'Nữ', 2000, 'Luật', 3.9),
-('Nguyễn Văn A', 'Nam', 2002, 'CNTT', 3.6), -- Dòng trùng lặp theo ảnh
-('Lưu Đức Tài', '2004', 2004, 'Cơ khí', NULL), -- Dòng lỗi gender và gpa theo ảnh
-('Võ Thị Thu Hằng', 'Nữ', 2001, 'CNTT', 3.0);
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    order_date DATE,
+    total_price NUMERIC(10, 2),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);
+CREATE TABLE order_items (
+    item_id INT PRIMARY KEY,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    price NUMERIC(10, 2),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+INSERT INTO customers (customer_id, customer_name, city) VALUES
+(1, 'Nguyễn Văn A', 'Hà Nội'),
+(2, 'Trần Thị B', 'Đà Nẵng'),
+(3, 'Lê Văn C', 'Hồ Chí Minh'),
+(4, 'Phạm Thị D', 'Hà Nội');
 
-INSERT INTO students (full_name, gender, birth_year, major, gpa) VALUES
-('Phan Hoàng Nam', 'Nam', 2003, 'CNTT', 3.8)
+INSERT INTO orders (order_id, customer_id, order_date, total_price) VALUES
+(101, 1, '2024-12-20', 3000.00),
+(102, 2, '2025-01-05', 1500.00),
+(103, 1, '2025-02-10', 2500.00),
+(104, 3, '2025-02-15', 4000.00),
+(105, 4, '2025-03-01', 800.00);
 
-update students
-set gpa=3.4
-where name='Lê Quốc Cường'
-
-delete from students where name is null
-
-select *from students where gpa>=3.0 and major='CNTT' limit 3
-
-select distinct major from students 
-
-select *from students where major='CNTT' order by gpa desc , full_name asc
-
-select *from students where full_name like 'Nguyễn%'
-
-select *from students where birth_year between 2001 and 2003
-
-
+INSERT INTO order_items (item_id, order_id, product_id, quantity, price) VALUES
+(1, 101, 1, 2, 1500.00),
+(2, 102, 2, 1, 1500.00),
+(3, 103, 3, 5, 500.00),
+(4, 104, 2, 4, 1000.00);
+--cau 1
+SELECT 
+    c.customer_name,
+    SUM(o.total_price) AS total_revenue,
+    COUNT(o.order_id) AS order_count
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+GROUP BY 
+    c.customer_id, c.customer_name
+HAVING 
+    SUM(o.total_price) > 2000;
+--cau 2
+SELECT 
+    c.customer_name,
+    SUM(o.total_price) AS total_revenue
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+GROUP BY 
+    c.customer_id, c.customer_name
+HAVING 
+    SUM(o.total_price) > (
+        SELECT AVG(customer_revenue)
+        FROM (
+            SELECT SUM(total_price) AS customer_revenue
+            FROM orders
+            GROUP BY customer_id
+        ) AS avg_sub
+    );
+--cau 3
+SELECT 
+    c.city,
+    SUM(o.total_price) AS city_revenue
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+GROUP BY 
+    c.city
+HAVING 
+    SUM(o.total_price) >= ALL (
+        
+        SELECT SUM(total_price)
+        FROM customers c2
+        JOIN orders o2 ON c2.customer_id = o2.customer_id
+        GROUP BY c2.city
+    );
+--cau 4
+SELECT 
+    c.customer_name,
+    c.city,
+    SUM(oi.quantity) AS total_products,
+    SUM(oi.quantity * oi.price) AS total_spent
+FROM 
+    customers c
+INNER JOIN 
+    orders o ON c.customer_id = o.customer_id
+INNER JOIN 
+    order_items oi ON o.order_id = oi.order_id
+GROUP BY 
+    c.customer_id, c.customer_name, c.city;
