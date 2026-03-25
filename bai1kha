@@ -1,39 +1,29 @@
-CREATE TABLE products (
-    product_id INT PRIMARY KEY,
-    product_name VARCHAR(100),
-    category VARCHAR(50)
+CREATE TABLE book (
+    book_id SERIAL PRIMARY KEY,
+    title VARCHAR(255),
+    author VARCHAR(100),
+    genre VARCHAR(50),
+    price DECIMAL(10,2),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TABLE orders (
-    order_id INT PRIMARY KEY,
-    product_id INT,
-    quantity INT,
-    total_price NUMERIC(10, 2),
-    FOREIGN KEY (product_id) REFERENCES products(product_id)
-);
+--cau 1
+create index idx_book_genre on book(genre)
+create index idx_book_author on book using gin (author gin_trgm_ops);
 
+--cau 2
+EXPLAIN ANALYZE SELECT * FROM book WHERE author ILIKE '%Rowling%';
+EXPLAIN ANALYZE SELECT * FROM book WHERE genre = 'Fantasy';
 
-INSERT INTO products (product_id, product_name, category) VALUES
-(1, 'Laptop Dell', 'Electronics'),
-(2, 'IPhone 15', 'Electronics'),
-(3, 'Bàn học gỗ', 'Furniture'),
-(4, 'Ghế xoay', 'Furniture');
-
-INSERT INTO orders (order_id, product_id, quantity, total_price) VALUES
-(101, 1, 2, 2200.00),
-(102, 2, 3, 3300.00),
-(103, 3, 5, 2500.00),
-(104, 4, 4, 1600.00),
-(105, 1, 1, 1100.00);
-
-select 
-   p.category,
-   sum(o.total_price) as total_sales,
-   sum(o.quantity) as total_quantity
-from products p
-join orders o on p.product_id=o.product_id
-group by p.category
-having sum(o.total_price) >2000
-order by total_sales desc
-
-
-
+--cau 3
+create index idx_book_title on book using gin (title gin_trgm_ops)
+--cau 4
+cluster book using idx_book_genre;
+explain analyze SELECT * FROM book WHERE genre = 'Fantasy';
+/*
+câu 5
+a. Loại chỉ mục hiệu quả cho từng loại truy vấn 
+b-tree: hiệu quả nhất cho các truy vấn bằng và khoảng
+gin : hiệu quả nhất cho các truy vấn so sánh bằng hoặc trong 1 khoảng hoặc các từ khóa độc lập
+b. Không mạnh ở các truy vấn phép toán ngoài dấu bằng
+/*
