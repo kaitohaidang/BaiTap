@@ -1,29 +1,61 @@
-CREATE TABLE book (
-    book_id SERIAL PRIMARY KEY,
-    title VARCHAR(255),
-    author VARCHAR(100),
-    genre VARCHAR(50),
-    price DECIMAL(10,2),
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- 1. Tạo bảng Khách hàng
+CREATE TABLE customer (
+    customer_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(15)
 );
+
+-- 2. Tạo bảng Đơn hàng
+CREATE TABLE orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customer(customer_id),
+    total_amount DECIMAL(10,2),
+    order_date DATE
+);
+
+-- 3. Thêm dữ liệu mẫu vào bảng customer
+INSERT INTO customer (full_name, email, phone) VALUES
+('Nguyễn Văn Nam', 'nam.nguyen@example.com', '0901234567'),
+('Trần Thị Lan', 'lan.tran@example.com', '0987654321'),
+('Lê Hữu Trí', 'tri.le@example.com', '0912345678');
+
+-- 4. Thêm dữ liệu mẫu vào bảng orders
+-- Lưu ý: customer_id (1, 2, 3) tương ứng với 3 khách hàng vừa tạo ở trên
+INSERT INTO orders (customer_id, total_amount, order_date) VALUES
+(1, 1500000.00, '2023-10-01'), -- Đơn của anh Nam
+(1, 500000.00, '2023-10-15'),  -- Đơn thứ hai của anh Nam
+(2, 2500000.50, '2023-11-05'), -- Đơn của chị Lan
+(3, 120000.00, '2023-11-20');  -- Đơn của anh Trí
 --cau 1
-create index idx_book_genre on book(genre)
-create index idx_book_author on book using gin (author gin_trgm_ops);
-
+create view v_order_summary as
+select c.full_name , o.total_amount ,o.order_date
+from customer c
+join orders o on c.customer_id=o.customer_id
 --cau 2
-EXPLAIN ANALYZE SELECT * FROM book WHERE author ILIKE '%Rowling%';
-EXPLAIN ANALYZE SELECT * FROM book WHERE genre = 'Fantasy';
-
+SELECT * FROM v_order_summary;
 --cau 3
-create index idx_book_title on book using gin (title gin_trgm_ops)
---cau 4
-cluster book using idx_book_genre;
-explain analyze SELECT * FROM book WHERE genre = 'Fantasy';
-/*
-câu 5
-a. Loại chỉ mục hiệu quả cho từng loại truy vấn 
-b-tree: hiệu quả nhất cho các truy vấn bằng và khoảng
-gin : hiệu quả nhất cho các truy vấn so sánh bằng hoặc trong 1 khoảng hoặc các từ khóa độc lập
-b. Không mạnh ở các truy vấn phép toán ngoài dấu bằng
-/*
+create view v_high_value_orders as
+select  o.order_id , o.total_amount, o.order_date
+from orders o
+where o.total_amount >=1000000
+
+update v_high_value_orders
+set total_amount=10000
+where order_id=1
+
+--cau4 
+create view v_monthly_sales  as
+select to_char(o.order_date,'yyyy-mm') as month,
+       sum(total_amount) as total_revenue
+from orders o 
+group by to_char(o.order_date,'yyyy-mm')
+
+--cau 5 
+drop view v_monthly_sales
+
+
+
+
+
+
