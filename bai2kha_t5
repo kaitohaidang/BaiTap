@@ -1,0 +1,32 @@
+  CREATE TABLE inventory (
+    product_id SERIAL PRIMARY KEY,
+    product_name VARCHAR(100),
+    quantity INT
+);
+
+INSERT INTO inventory (product_name, quantity) VALUES
+('Laptop Dell XPS 15', 50),
+('Chuột không dây Logitech', 120),
+('Bàn phím cơ Keychron', 75),
+('Màn hình LG 24 inch', 30),
+('Cáp sạc Type-C', 200);
+
+-- Xem lại kết quả sau khi thêm dữ liệu
+SELECT * FROM inventory;
+--cau 1
+create procedure check_stock(p_id INT, p_qty INT)
+language plpgsql 
+as $$
+declare 
+   dem int;
+begin
+     select quantity into dem 
+	 from inventory 
+	 where product_id=p_id;
+	 if dem < p_qty then
+	 raise notice 'khong du hang trong kho';	
+	 end if;
+end;
+$$;
+call check_stock(1,10);
+call check_stock(1,100);
