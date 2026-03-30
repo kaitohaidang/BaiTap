@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS orders ;
+
+create table orders(
+   order_id serial primary key,
+   customer_id int not null,
+   order_date date,
+   total_amount numeric
+);
+EXPLAIN ANALYZE 
+SELECT * FROM Orders WHERE customer_id = 1;
+create index idx_customer_id on orders using btree (customer_id)
