@@ -1,0 +1,26 @@
+CREATE TABLE Sales (
+    sale_id SERIAL PRIMARY KEY,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    sale_date DATE,
+    amount NUMERIC
+);
+
+-- Thêm một số dữ liệu mẫu
+INSERT INTO Sales (customer_id, product_id, sale_date, amount) VALUES
+(1, 101, '2023-10-01', 600),   -- Khách 1 mua lần 1
+(1, 102, '2023-10-05', 500),   -- Khách 1 mua lần 2 (Tổng: 1100)
+(2, 103, '2023-10-02', 400),   -- Khách 2 mua lần 1 (Tổng: 400)
+(3, 101, '2023-10-10', 1500);  -- Khách 3 mua lần 1 (Tổng: 1500)
+
+create view CustomerSales as
+  select s.customer_id , sum(s.amount) as tong_tien
+  from Sales s 
+  group by s.customer_id;
+
+SELECT * FROM CustomerSales WHERE tong_tien > 1000;
+
+UPDATE CustomerSales 
+SET total_amount = 2000 
+WHERE customer_id = 1;
+-- loi khong cap nhat duoc
