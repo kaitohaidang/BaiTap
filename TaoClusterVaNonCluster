@@ -1,1 +1,11 @@
-
+create table products (
+    product_id SERIAL PRIMARY KEY,
+    category_id INT NOT NULL,
+    price NUMERIC,
+    stock_quantity INT
+);
+create index idx_category_id on products (category_id);
+cluster products using idx_category_id;
+create index idx_price on products(price);
+explain
+SELECT * FROM Products WHERE category_id = 1 ORDER BY price; 
