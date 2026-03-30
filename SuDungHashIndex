@@ -1,0 +1,9 @@
+create table Users (
+   user_id serial primary key,
+   email varchar(255) not null,
+   username varchar(255) not null
+);
+create index idx_email on Users using hash (email);
+
+explain
+select * from User where email='example@example.com';
