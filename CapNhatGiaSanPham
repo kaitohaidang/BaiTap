@@ -1,0 +1,32 @@
+-- 1. Tạo bảng Products
+CREATE TABLE Products (
+    product_id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    price NUMERIC,
+    category_id INT
+);
+
+-- 2. Thêm dữ liệu mẫu (Danh mục 1 có 3 sản phẩm, Danh mục 2 có 1 sản phẩm)
+INSERT INTO Products (name, price, category_id) VALUES
+('Laptop Dell', 1000, 1),
+('Chuột không dây', 50, 1),
+('Bàn phím cơ', 100, 1),
+('Bàn làm việc', 200, 2);
+
+create procedure update_product_price(p_category_id INT, p_increase_percent NUMERIC)
+language plpgsql
+as $$
+declare v_product record;
+        v_new_price numeric;
+begin
+for v_product in (select product_id ,price from products where category_id=p_category_id)
+loop
+   v_new_price:= v_product.price+ (v_product.price*p_increase_percent/100.0);
+   update Products
+   set price = v_new_price
+   where product_id=v_product.product_id;
+end loop;
+end; $$
+drop procedure update_product_price
+SELECT * FROM Products ORDER BY category_id, product_id;
+CALL update_product_price(1, 10);
