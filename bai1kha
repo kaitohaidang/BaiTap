@@ -1,29 +1,40 @@
-CREATE TABLE book (
-    book_id SERIAL PRIMARY KEY,
-    title VARCHAR(255),
-    author VARCHAR(100),
-    genre VARCHAR(50),
-    price DECIMAL(10,2),
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Xóa bảng cũ nếu đang tồn tại
+DROP TABLE IF EXISTS products CASCADE;
+
+-- Tạo bảng products theo yêu cầu
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    price NUMERIC,
+    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Mặc định lấy thời gian lúc mới tạo
 );
---cau 1
-create index idx_book_genre on book(genre)
-create index idx_book_author on book using gin (author gin_trgm_ops);
+INSERT INTO products (name, price) VALUES
+('Iphone 15', 25000000),
+('Samsung Galaxy S23', 22000000),
+('Xiaomi 13', 15000000),
+('Macbook Air M2', 30000000),
+('Dell XPS 13', 28000000);
 
---cau 2
-EXPLAIN ANALYZE SELECT * FROM book WHERE author ILIKE '%Rowling%';
-EXPLAIN ANALYZE SELECT * FROM book WHERE genre = 'Fantasy';
+select * from products 
+create function update_last_modified()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.last_modified= current_timestamp;
+  return new;
+end;
+$$;
 
---cau 3
-create index idx_book_title on book using gin (title gin_trgm_ops)
---cau 4
-cluster book using idx_book_genre;
-explain analyze SELECT * FROM book WHERE genre = 'Fantasy';
-/*
-câu 5
-a. Loại chỉ mục hiệu quả cho từng loại truy vấn 
-b-tree: hiệu quả nhất cho các truy vấn bằng và khoảng
-gin : hiệu quả nhất cho các truy vấn so sánh bằng hoặc trong 1 khoảng hoặc các từ khóa độc lập
-b. Không mạnh ở các truy vấn phép toán ngoài dấu bằng
-/*
+create trigger trg_update_last_modified 
+before update on products
+for each row
+execute function update_last_modified()
+
+INSERT INTO products (name, price) 
+VALUES ('Điện thoại iPhone', 20000);
+
+
+SELECT * FROM products;
+
+
