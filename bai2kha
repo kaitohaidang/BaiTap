@@ -1,61 +1,38 @@
--- 1. Tạo bảng Khách hàng
-CREATE TABLE customer (
-    customer_id SERIAL PRIMARY KEY,
-    full_name VARCHAR(100),
-    email VARCHAR(100),
-    phone VARCHAR(15)
+
+CREATE TABLE customers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    credit_limit NUMERIC NOT NULL -- Hạn mức tín dụng tối đa
 );
 
--- 2. Tạo bảng Đơn hàng
+-- Tạo bảng đơn hàng
 CREATE TABLE orders (
-    order_id SERIAL PRIMARY KEY,
-    customer_id INT REFERENCES customer(customer_id),
-    total_amount DECIMAL(10,2),
-    order_date DATE
+    id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(id), -- Khóa ngoại liên kết với bảng customers
+    order_amount NUMERIC NOT NULL
 );
+create function check_credit_limit()
+returns trigger
+language plpgslq
+as $$ 
+begin
+ declare
+ v_credit_limit numeric;
+ v_order_amount numeric;
+ select credit_limit into v_credit_limit
+ from customers
+ where id = new.customer_id;
 
--- 3. Thêm dữ liệu mẫu vào bảng customer
-INSERT INTO customer (full_name, email, phone) VALUES
-('Nguyễn Văn Nam', 'nam.nguyen@example.com', '0901234567'),
-('Trần Thị Lan', 'lan.tran@example.com', '0987654321'),
-('Lê Hữu Trí', 'tri.le@example.com', '0912345678');
+ select sum(order_amount) into v_order_amount
+ from orders
+ where id = new.customer_id;
+ IF (v_current_total + NEW.order_amount) > v_limit THEN
+        RAISE EXCEPTION 'Từ chối đơn hàng! Vượt quá hạn mức tín dụng. Hạn mức: %, Tổng hiện tại + Đơn mới: %', v_limit, (v_current_total + NEW.order_amount);
+    END IF;
+  return new;
+end;
 
--- 4. Thêm dữ liệu mẫu vào bảng orders
--- Lưu ý: customer_id (1, 2, 3) tương ứng với 3 khách hàng vừa tạo ở trên
-INSERT INTO orders (customer_id, total_amount, order_date) VALUES
-(1, 1500000.00, '2023-10-01'), -- Đơn của anh Nam
-(1, 500000.00, '2023-10-15'),  -- Đơn thứ hai của anh Nam
-(2, 2500000.50, '2023-11-05'), -- Đơn của chị Lan
-(3, 120000.00, '2023-11-20');  -- Đơn của anh Trí
---cau 1
-create view v_order_summary as
-select c.full_name , o.total_amount ,o.order_date
-from customer c
-join orders o on c.customer_id=o.customer_id
---cau 2
-SELECT * FROM v_order_summary;
---cau 3
-create view v_high_value_orders as
-select  o.order_id , o.total_amount, o.order_date
-from orders o
-where o.total_amount >=1000000
-
-update v_high_value_orders
-set total_amount=10000
-where order_id=1
-
---cau4 
-create view v_monthly_sales  as
-select to_char(o.order_date,'yyyy-mm') as month,
-       sum(total_amount) as total_revenue
-from orders o 
-group by to_char(o.order_date,'yyyy-mm')
-
---cau 5 
-drop view v_monthly_sales
-
-
-
-
-
-
+CREATE TRIGGER trg_check_credit
+BEFORE INSERT ON orders
+FOR EACH ROW
+EXECUTE FUNCTION check_credit_limit();
