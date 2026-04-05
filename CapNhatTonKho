@@ -1,0 +1,42 @@
+-- Tạo bảng sản phẩm
+CREATE TABLE IF NOT EXISTS products (
+    product_id SERIAL PRIMARY KEY,
+    name VARCHAR(50),
+    stock INT
+);
+
+-- Tạo bảng bán hàng
+CREATE TABLE IF NOT EXISTS sales (
+    sale_id SERIAL PRIMARY KEY,
+    product_id INT REFERENCES products(product_id),
+    quantity INT
+);
+
+-- Làm mới dữ liệu mẫu: iPhone 15 có 10 chiếc
+TRUNCATE TABLE sales CASCADE;
+UPDATE products SET stock = 10 WHERE name = 'iPhone 15';
+-- Nếu chưa có iPhone 15: INSERT INTO products (name, stock) VALUES ('iPhone 15', 10);
+CREATE OR REPLACE FUNCTION update_stock_after_sale()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Cập nhật giảm số lượng tồn kho dựa trên đơn hàng mới (NEW)
+    UPDATE products 
+    SET stock = stock - NEW.quantity 
+    WHERE product_id = NEW.product_id;
+
+    -- Log thông báo ra màn hình console (tùy chọn)
+    RAISE NOTICE 'Đã cập nhật kho cho sản phẩm ID %: Trừ % chiếc', NEW.product_id, NEW.quantity;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+-- Xóa trigger cũ nếu có để tránh xung đột
+DROP TRIGGER IF EXISTS trg_update_stock_after_insert ON sales;
+
+CREATE TRIGGER trg_update_stock_after_insert
+AFTER INSERT ON sales
+FOR EACH ROW
+EXECUTE FUNCTION update_stock_after_sale();
+-- Mua 3 chiếc iPhone 15
+INSERT INTO sales (product_id, quantity) VALUES (1, 3);
+SELECT * FROM products WHERE product_id = 1;
