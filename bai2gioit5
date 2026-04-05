@@ -1,49 +1,63 @@
-DROP TABLE IF EXISTS products;
 
--- Lệnh tạo bảng có tên là 'products'
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,    -- Tạo mã định danh (ID) tự động tăng, và là khóa chính của bảng
-    name VARCHAR(100),        -- Cột tên sản phẩm, lưu trữ văn bản tối đa 100 ký tự
-    price NUMERIC,            -- Cột giá tiền, lưu trữ số (có thể bao gồm số thập phân)
-    discount_percent INT      -- Cột phần trăm giảm giá, lưu trữ số nguyên (ví dụ: 10, 20)
+-- Tạo bảng tài khoản
+CREATE TABLE accounts (
+    account_id SERIAL PRIMARY KEY,
+    customer_name VARCHAR(100),
+    balance NUMERIC(12,2)
 );
 
--- Lệnh thêm nhiều dòng dữ liệu vào bảng 'products'
--- Chúng ta chỉ định các cột cần chèn là name, price, và discount_percent
-INSERT INTO products (name, price, discount_percent)
-VALUES 
-    ('Áo thun cơ bản', 150000, 0),       -- Sản phẩm 1: Không giảm giá
-    ('Quần Jeans Nam', 350000, 10),      -- Sản phẩm 2: Giảm giá 10%
-    ('Giày thể thao chạy bộ', 850000, 15), -- Sản phẩm 3: Giảm giá 15%
-    ('Balo laptop', 420000, 5);          -- Sản phẩm 4: Giảm giá 5%
+-- Tạo bảng lịch sử giao dịch
+CREATE TABLE transactions (
+    trans_id SERIAL PRIMARY KEY,
+    account_id INT REFERENCES accounts(account_id),
+    amount NUMERIC(12,2),
+    trans_type VARCHAR(20), -- 'WITHDRAW' hoặc 'DEPOSIT'
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
--- Lấy tất cả thông tin từ bảng 'products' để hiển thị
-SELECT * FROM products;
-CREATE OR REPLACE PROCEDURE calculate_discount(p_id INT, OUT p_final_price NUMERIC)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_price NUMERIC;    -- Biến lưu giá gốc
-    v_discount INT;     -- Biến lưu phần trăm giảm giá
-BEGIN
-    SELECT price, discount_percent 
-    INTO v_price, v_discount
-    FROM products 
-    WHERE id = p_id;
-    IF v_discount > 50 THEN
-        v_discount := 50;
-    END IF;
-    p_final_price := v_price - (v_price * v_discount / 100.0);
-    UPDATE products
-    SET price = p_final_price
-    WHERE id = p_id;
+-- Nạp dữ liệu mẫu cho khách hàng "Nguyen Van A" với 1000.00
+INSERT INTO accounts (customer_name, balance) 
+VALUES ('Nguyen Van A', 1000.00);
+-- Bước 1: Bắt đầu giao dịch
+BEGIN;
 
-END;
-$$;
-drop procedure  calculate_discount
+-- Bước 2: Kiểm tra và Trừ tiền (Giả sử id=1)
+-- Trong thực tế, ta thường dùng: WHERE account_id = 1 AND balance >= 200.00
+UPDATE accounts 
+SET balance = balance - 200.00 
+WHERE account_id = 1;
 
-call calculate_discount(2,null)
-select p_final_price
+-- Bước 3: Ghi log vào bảng transactions
+INSERT INTO transactions (account_id, amount, trans_type) 
+VALUES (1, 200.00, 'WITHDRAW');
 
+-- Bước 4: Hoàn tất
+COMMIT;
 
+-- Kiểm tra kết quả: Balance còn 800.00 và có 1 dòng log
+SELECT * FROM accounts;
+SELECT * FROM transactions;
+BEGIN;
 
+-- Bước 1: Trừ tiền (Dự kiến 800.00 -> 700.00)
+UPDATE accounts 
+SET balance = balance - 100.00 
+WHERE account_id = 1;
+
+-- Bước 2: Cố ý chèn lỗi Khóa ngoại (account_id 999 không tồn tại)
+INSERT INTO transactions (account_id, amount, trans_type) 
+VALUES (999, 100.00, 'WITHDRAW'); 
+
+-- Bước 3: Do lệnh INSERT trên báo lỗi, ta thực hiện hủy bỏ
+ROLLBACK;
+
+-- Bước 4: Kiểm chứng
+-- Số dư vẫn phải là 800.00 (không bị trừ xuống 700.00)
+SELECT * FROM accounts;
+-- Không có dòng log mới nào được ghi
+SELECT * FROM transactions;
+-- Tổng số tiền đã rút từ Log
+SELECT SUM(amount) FROM transactions WHERE trans_type = 'WITHDRAW' AND account_id = 1;
+
+-- So sánh với (Số dư ban đầu - Số dư hiện tại)
+SELECT (1000.00 - balance) AS total_deducted FROM accounts WHERE account_id = 1;
