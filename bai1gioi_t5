@@ -1,41 +1,67 @@
-CREATE TABLE employees (
-    emp_id SERIAL PRIMARY KEY,
-    emp_name VARCHAR(100),
-    job_level INT,
-    salary NUMERIC
+-- Tạo các bảng như trong hình
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    product_name VARCHAR(100),
+    stock INT,
+    price NUMERIC(10,2)
 );
 
-INSERT INTO employees (emp_name, job_level, salary) VALUES
-('Nguyen Van A', 1, 10000000),
-('Tran Thi B', 2, 15000000),
-('Le Van C', 3, 20000000),
-('Pham Thi D', 1, 12000000);
+CREATE TABLE orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_name VARCHAR(100),
+    total_amount NUMERIC(10,2),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
-SELECT * FROM employees;
+CREATE TABLE order_items (
+    order_item_id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(order_id),
+    product_id INT REFERENCES products(product_id),
+    quantity INT,
+    subtotal NUMERIC(10,2)
+);
 
-create procedure adjust_salary(p_emp_id INT, OUT p_new_salary NUMERIC)
-LANGUAGE plpgsql
-AS $$
-declare
-  luong_hien_tai numeric;
-  p_job_level int;
-begin
-   select salary ,job_level into luong_hien_tai ,  p_job_level 
-   from employees
-   where emp_id=p_emp_id;
-   if p_job_level = 1 then
-   p_new_salary:=luong_hien_tai + (luong_hien_tai * 0.05);
-   elsif p_job_level = 2 then
-   p_new_salary:= luong_hien_tai+luong_hien_tai*0.1;
-   elsif p_job_level = 3 then
-   p_new_salary:= luong_hien_tai+luong_hien_tai*0.15;
-   else
-   p_new_salary =luong_hien_tai;
-   end if;
-   update employees
-   set salary=p_new_salary
-   where emp_id=p_emp_id;
-end;
-$$;
-call adjust_salary(1,null)
-SELECT * FROM employees WHERE emp_id = 1;
+-- Nạp dữ liệu sản phẩm mẫu
+INSERT INTO products (product_name, stock, price)
+VALUES 
+    ('Laptop Dell', 5, 1500.00), 
+    ('Chuột Logitech', 10, 25.00);
+BEGIN;
+
+-- 1. Tạo đơn hàng tổng quát trước để lấy order_id
+INSERT INTO orders (customer_name, total_amount) 
+VALUES ('Nguyen Van A', 3025.00);
+
+-- 2. Thêm chi tiết sản phẩm 1 (Laptop) và giảm kho
+INSERT INTO order_items (order_id, product_id, quantity, subtotal)
+VALUES (1, 1, 2, 3000.00);
+
+UPDATE products SET stock = stock - 2 WHERE product_id = 1;
+
+-- 3. Thêm chi tiết sản phẩm 2 (Chuột) và giảm kho
+INSERT INTO order_items (order_id, product_id, quantity, subtotal)
+VALUES (1, 2, 1, 25.00);
+
+UPDATE products SET stock = stock - 1 WHERE product_id = 2;
+
+-- Nếu mọi thứ ổn, xác nhận giao dịch
+COMMIT;
+
+-- Kiểm tra kết quả
+SELECT * FROM products;
+SELECT * FROM orders;
+SELECT * FROM order_items;
+UPDATE products SET stock = 0 WHERE product_id = 1;
+-- Thêm ràng buộc để stock không bao giờ < 0
+ALTER TABLE products ADD CONSTRAINT check_stock_positive CHECK (stock >= 0);
+
+BEGIN;
+
+-- Thử tạo đơn hàng mới
+INSERT INTO orders (customer_name, total_amount) VALUES ('Khách Lỗi', 1500.00);
+
+-- Thử giảm kho sản phẩm 1 (đang có 0 mà trừ 1 sẽ gây lỗi Constraint)
+UPDATE products SET stock = stock - 1 WHERE product_id = 1; 
+
+-- KHI CÂU LỆNH TRÊN BÁO LỖI, BẠN PHẢI GỌI:
+ROLLBACK;
