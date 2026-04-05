@@ -1,29 +1,48 @@
-DROP TABLE IF EXISTS order_detail;
-
-CREATE TABLE order_detail (
-    id SERIAL PRIMARY KEY,
-    order_id INT,
-    product_name VARCHAR(100),
-    quantity INT,
-    unit_price NUMERIC
+CREATE TABLE flights (
+    flight_id SERIAL PRIMARY KEY,
+    flight_name VARCHAR(100),
+    available_seats INT
 );
 
-INSERT INTO order_detail (order_id, product_name, quantity, unit_price) VALUES
-(101, 'Bàn phím cơ Logitech', 2, 1500000.00),
-(101, 'Chuột không dây', 1, 500000.00),
-(102, 'Màn hình Dell 24 inch', 1, 3500000.00),
-(103, 'Cáp HDMI 2m', 3, 120000.00),
-(103, 'Giá đỡ laptop', 1, 250000.00);
+CREATE TABLE bookings (
+    booking_id SERIAL PRIMARY KEY,
+    flight_id INT REFERENCES flights(flight_id),
+    customer_name VARCHAR(100)
+);
 
-SELECT * FROM order_detail;
---cau 1
-create or replace procedure calculate_order_total(order_id_input INT, OUT total NUMERIC)
-language plpgsql
-as $$
-begin
-    select sum(quantity*unit_price) into total
-	from order_detail o
-	where order_id =order_id_input;
-end;
-$$;
-call calculate_order_total(101,null)
+INSERT INTO flights (flight_name, available_seats)
+VALUES 
+    ('VN123', 3), 
+    ('VN456', 2);
+
+BEGIN;
+
+UPDATE flights 
+SET available_seats = available_seats - 1 
+WHERE flight_name = 'VN123';
+
+INSERT INTO bookings (flight_id, customer_name) 
+VALUES (1, 'Nguyen Van A');
+
+-- Bước 4: Hoàn tất giao dịch
+COMMIT;
+
+
+SELECT * FROM flights;
+SELECT * FROM bookings;
+-- Bước 1: Bắt đầu giao dịch mới
+BEGIN;
+
+
+UPDATE flights 
+SET available_seats = available_seats - 1 
+WHERE flight_name = 'VN123';
+
+
+INSERT INTO bookings (flight_id, customer_name) 
+VALUES (999, 'Nguyen Van B');
+
+ROLLBACK;
+
+SELECT * FROM flights;
+SELECT * FROM bookings;
