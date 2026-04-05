@@ -1,32 +1,56 @@
-  CREATE TABLE inventory (
-    product_id SERIAL PRIMARY KEY,
-    product_name VARCHAR(100),
-    quantity INT
+-- Xóa bảng cũ nếu tồn tại
+DROP TABLE IF EXISTS accounts;
+
+-- Tạo bảng tài khoản ngân hàng
+CREATE TABLE accounts (
+    account_id SERIAL PRIMARY KEY,
+    owner_name VARCHAR(100),
+    balance NUMERIC(10,2)
 );
 
-INSERT INTO inventory (product_name, quantity) VALUES
-('Laptop Dell XPS 15', 50),
-('Chuột không dây Logitech', 120),
-('Bàn phím cơ Keychron', 75),
-('Màn hình LG 24 inch', 30),
-('Cáp sạc Type-C', 200);
+-- Chèn dữ liệu ban đầu
+INSERT INTO accounts (owner_name, balance)
+VALUES 
+    ('A', 500.00), 
+    ('B', 300.00);
 
--- Xem lại kết quả sau khi thêm dữ liệu
-SELECT * FROM inventory;
---cau 1
-create procedure check_stock(p_id INT, p_qty INT)
-language plpgsql 
-as $$
-declare 
-   dem int;
-begin
-     select quantity into dem 
-	 from inventory 
-	 where product_id=p_id;
-	 if dem < p_qty then
-	 raise notice 'khong du hang trong kho';	
-	 end if;
-end;
-$$;
-call check_stock(1,10);
-call check_stock(1,100);
+-- Xem trạng thái ban đầu
+SELECT * FROM accounts;
+-- Bắt đầu giao dịch
+BEGIN;
+
+-- Bước 1: Trừ 100.00 từ tài khoản A (id=1)
+UPDATE accounts 
+SET balance = balance - 100.00 
+WHERE account_id = 1;
+
+-- Bước 2: Cộng 100.00 vào tài khoản B (id=2)
+UPDATE accounts 
+SET balance = balance + 100.00 
+WHERE account_id = 2;
+
+-- Xác nhận hoàn tất giao dịch
+COMMIT;
+
+-- Kiểm tra lại: A còn 400.00, B có 400.00
+SELECT * FROM accounts;
+-- Bắt đầu giao dịch mới
+BEGIN;
+
+-- Bước 1: Trừ 100.00 từ tài khoản A (A đang có 400.00, dự kiến còn 300.00)
+UPDATE accounts 
+SET balance = balance - 100.00 
+WHERE account_id = 1;
+
+-- Bước 2: Cố ý cập nhật sai account_id (ID 999 không tồn tại)
+-- Lệnh này sẽ chạy nhưng 0 hàng bị ảnh hưởng (hoặc bạn có thể viết sai cú pháp để gây lỗi)
+UPDATE accounts 
+SET balance = balance + 100.00 
+WHERE account_id = 999; 
+
+-- Nếu bạn nhận thấy có lỗi hoặc không có hàng nào được cập nhật ở bước 2
+-- Hãy hủy bỏ toàn bộ để trả lại tiền cho A
+ROLLBACK;
+
+-- Kiểm tra lại: A vẫn còn nguyên 400.00, dữ liệu không bị sai lệch
+SELECT * FROM accounts;
