@@ -1,0 +1,44 @@
+import java.util.Scanner;
+
+public class HoaDonKhachHang {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Nhập tên khách hàng: ");
+        String tenKhachHang = scanner.nextLine();
+
+        System.out.print("Nhập tên sản phẩm: ");
+        String tenSanPham = scanner.nextLine();
+
+        System.out.print("Nhập giá sản phẩm: ");
+        double giaSanPham = scanner.nextDouble();
+
+        System.out.print("Nhập số lượng mua: ");
+        int soLuong = scanner.nextInt();
+
+        System.out.print("Khách có thẻ thành viên không (true/false): ");
+        boolean laThanhVien = scanner.nextBoolean();
+
+        double thanhTien = giaSanPham * soLuong;
+        
+        double giamGia = laThanhVien ? (thanhTien * 0.10) : 0;
+        
+        double vat = (thanhTien - giamGia) * 0.08;
+        
+        double tongThanhToan = thanhTien - giamGia + vat;
+
+        System.out.println("\n================ CHI TIẾT HÓA ĐƠN ================");
+        System.out.println("Khách hàng      : " + tenKhachHang);
+        System.out.println("Sản phẩm        : " + tenSanPham);
+        System.out.println("Số lượng        : " + soLuong);
+        System.out.printf("Đơn giá         : %,.0f VNĐ\n", giaSanPham);
+        System.out.printf("Thành tiền      : %,.0f VNĐ\n", thanhTien);
+        System.out.printf("Giảm giá        : %,.0f VNĐ\n", giamGia);
+        System.out.printf("Tiền VAT (8%%)   : %,.0f VNĐ\n", vat);
+        System.out.println("--------------------------------------------------");
+        System.out.printf("TỔNG THANH TOÁN : %,.0f VNĐ\n", tongThanhToan);
+        System.out.println("==================================================");
+
+        scanner.close();
+    }
+}
