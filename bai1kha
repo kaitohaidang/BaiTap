@@ -1,40 +1,14 @@
--- Xóa bảng cũ nếu đang tồn tại
-DROP TABLE IF EXISTS products CASCADE;
+import java.util.Scanner;
 
--- Tạo bảng products theo yêu cầu
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    price NUMERIC,
-    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Mặc định lấy thời gian lúc mới tạo
-);
-INSERT INTO products (name, price) VALUES
-('Iphone 15', 25000000),
-('Samsung Galaxy S23', 22000000),
-('Xiaomi 13', 15000000),
-('Macbook Air M2', 30000000),
-('Dell XPS 13', 28000000);
-
-select * from products 
-create function update_last_modified()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.last_modified= current_timestamp;
-  return new;
-end;
-$$;
-
-create trigger trg_update_last_modified 
-before update on products
-for each row
-execute function update_last_modified()
-
-INSERT INTO products (name, price) 
-VALUES ('Điện thoại iPhone', 20000);
-
-
-SELECT * FROM products;
-
-
+public class Bai1 {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int n = scanner.nextInt();
+        long sum=0;
+        if (n<0 || n==0) System.out.println("So nhap vao khong hop le");
+        else for (int i=1;i<n;i++) {
+            sum += n;
+        }
+        System.out.println("tong cac so tu 1 den "+n+" la "+sum);
+    }
+}
