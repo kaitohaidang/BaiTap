@@ -1,38 +1,41 @@
+import java.util.Scanner;
 
-CREATE TABLE customers (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    credit_limit NUMERIC NOT NULL -- Hạn mức tín dụng tối đa
-);
+public class Bai1 {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
 
--- Tạo bảng đơn hàng
-CREATE TABLE orders (
-    id SERIAL PRIMARY KEY,
-    customer_id INT REFERENCES customers(id), -- Khóa ngoại liên kết với bảng customers
-    order_amount NUMERIC NOT NULL
-);
-create function check_credit_limit()
-returns trigger
-language plpgslq
-as $$ 
-begin
- declare
- v_credit_limit numeric;
- v_order_amount numeric;
- select credit_limit into v_credit_limit
- from customers
- where id = new.customer_id;
+        System.out.print("Nhập số tháng (1-12): ");
 
- select sum(order_amount) into v_order_amount
- from orders
- where id = new.customer_id;
- IF (v_current_total + NEW.order_amount) > v_limit THEN
-        RAISE EXCEPTION 'Từ chối đơn hàng! Vượt quá hạn mức tín dụng. Hạn mức: %, Tổng hiện tại + Đơn mới: %', v_limit, (v_current_total + NEW.order_amount);
-    END IF;
-  return new;
-end;
+        // Kiểm tra nếu người dùng nhập đúng định dạng số nguyên
+        if (scanner.hasNextInt()) {
+            int thang = scanner.nextInt();
 
-CREATE TRIGGER trg_check_credit
-BEFORE INSERT ON orders
-FOR EACH ROW
-EXECUTE FUNCTION check_credit_limit();
+            // Cấu trúc switch-case để phân loại tháng
+            switch (thang) {
+                // Nhóm các tháng có 31 ngày
+                case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+                    System.out.println("Tháng " + thang + " có 31 ngày.");
+                    break;
+
+                // Nhóm các tháng có 30 ngày
+                case 4: case 6: case 9: case 11:
+                    System.out.println("Tháng " + thang + " có 30 ngày.");
+                    break;
+
+                // Trường hợp tháng 2
+                case 2:
+                    System.out.println("Tháng 2 có 28 hoặc 29 ngày (tùy theo năm nhuận).");
+                    break;
+
+                // Trường hợp số ngoài phạm vi 1-12
+                default:
+                    System.out.println("Tháng không hợp lệ.");
+                    break;
+            }
+        } else {
+            System.out.println("Vui lòng nhập một số nguyên!");
+        }
+
+        scanner.close();
+    }
+}
