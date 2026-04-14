@@ -1,0 +1,32 @@
+import java.text.ParsePosition;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Bai1 {
+    public static long SoMu(long a,long n) {
+        long sum=1;
+        for (int i=0;i<n;i++){
+            sum*=a;
+        }
+        return sum;
+    }
+    public static Boolean CheckArm(long n ) {
+        long sum=0;
+        String s=Long.toString(n);
+        int k =s.length();
+        for (int i=0;i<s.length();i++) {
+            sum+=SoMu(Long.parseLong(Character.toString(s.charAt(i))),k);
+        }
+            return sum==n;
+            }
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        long n =scanner.nextLong();
+       for (int i=0;i<=n;i++) {
+           if (CheckArm(i)) {
+               System.out.print(i+" ");
+           }
+       }
+
+    }
+}
