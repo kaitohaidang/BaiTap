@@ -1,0 +1,33 @@
+import java.util.Scanner;
+
+public class TinhChiSoBMI {
+    public static void main(String[] args) {
+        // Tạo đối tượng Scanner để đọc dữ liệu từ bàn phím
+        Scanner sc = new Scanner(System.in);
+        
+        System.out.println("===== CHƯƠNG TRÌNH TÍNH CHỈ SỐ BMI =====");
+        
+        // 1. Nhập cân nặng
+        System.out.print("Nhập cân nặng (kg): ");
+        double canNang = sc.nextDouble();
+        
+        // 2. Nhập chiều cao
+        System.out.print("Nhập chiều cao (m): ");
+        double chieuCao = sc.nextDouble();
+        
+        // 3. Tính toán chỉ số BMI
+        // Công thức: Cân nặng chia cho bình phương chiều cao
+        double bmi = canNang / (chieuCao * chieuCao);
+        
+        // 4. In kết quả
+        System.out.println("\n--- KẾT QUẢ ---");
+        System.out.println("Cân nặng = " + canNang + " (kg)");
+        System.out.println("Chiều cao = " + chieuCao + " (m)");
+        
+        // Sử dụng printf với format "%.2f" để làm tròn BMI đến 2 chữ số thập phân
+        System.out.printf("Chỉ số BMI = %.2f\n", bmi);
+        
+        // Đóng Scanner để giải phóng tài nguyên
+        sc.close();
+    }
+}
