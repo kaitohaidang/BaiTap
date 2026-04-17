@@ -1,0 +1,45 @@
+import java.util.Scanner;
+
+public class TinhQuangDuong {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        
+        System.out.println("===== CHƯƠNG TRÌNH TÍNH QUÃNG ĐƯỜNG =====");
+        
+        double vanToc;
+        double thoiGian;
+        
+        // 1. Nhập và kiểm tra Vận tốc
+        // Vòng lặp do-while sẽ chạy ít nhất 1 lần và lặp lại nếu điều kiện (vanToc < 0) là đúng
+        do {
+            System.out.print("Nhập vận tốc (km/h): ");
+            vanToc = sc.nextDouble();
+            
+            if (vanToc < 0) {
+                System.out.println("Cảnh báo: Vận tốc không được nhỏ hơn 0. Vui lòng nhập lại!");
+            }
+        } while (vanToc < 0);
+        
+        // 2. Nhập và kiểm tra Thời gian
+        do {
+            System.out.print("Nhập thời gian đi (giờ): ");
+            thoiGian = sc.nextDouble();
+            
+            if (thoiGian < 0) {
+                System.out.println("Cảnh báo: Thời gian không được nhỏ hơn 0. Vui lòng nhập lại!");
+            }
+        } while (thoiGian < 0);
+        
+        // 3. Thực hiện tính toán
+        double quangDuong = vanToc * thoiGian;
+        
+        // 4. In kết quả (Output)
+        System.out.println("\n--- KẾT QUẢ ---");
+        System.out.println("Vận tốc đã nhập   = " + vanToc + " (km/h)");
+        System.out.println("Thời gian đã nhập = " + thoiGian + " (giờ)");
+        System.out.println("=> Quãng đường đi được = " + quangDuong + " (km)");
+        
+        // Đóng Scanner
+        sc.close();
+    }
+}
